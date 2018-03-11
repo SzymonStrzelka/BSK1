@@ -1,5 +1,6 @@
 package bsk;
 
+import bsk.controllers.MainWindowController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -10,6 +11,9 @@ import java.net.URL;
 import java.nio.file.Paths;
 
 public class RunApplication extends Application {
+
+    private Stage stage;
+    private MainWindowController mainWindowController;
 
     public static void main(String[] args) {
         Application.launch(args);
@@ -24,5 +28,10 @@ public class RunApplication extends Application {
         primaryStage.setTitle("Data encryption application");
         primaryStage.setScene(scene);
         primaryStage.show();
+        stage = primaryStage;
+    }
+    private void initialize(){
+        mainWindowController = new MainWindowController();
+        mainWindowController.initialize(stage);
     }
 }
