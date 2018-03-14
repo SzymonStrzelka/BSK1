@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<users>
+    <user>
+        <login>admin</login>
+        <password>4bIfy7AgAMNVkzdjaHFc9Z8hnG4=</password>
+        <salt>anCxuq3umVM=</salt>
+    </user>
+    <user>
+        <login>test</login>
+        <password>ZuCygZZmEdeHnBSKYKH84CNwLlU=</password>
+        <salt>MpnlsgahXqk=</salt>
+    </user>
+</users>
