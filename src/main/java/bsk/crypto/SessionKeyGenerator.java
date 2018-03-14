@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
-public class SymetricKeyGenerator {
+public class SessionKeyGenerator {
 
     public SecretKey generate128BitKey(){
         return generateKey(128);
@@ -17,7 +17,7 @@ public class SymetricKeyGenerator {
     }
 
     public SecretKey generate256BitKey(){
-        return generateKey(192);
+        return generateKey(256);
     }
 
     private SecretKey generateKey(int bits){
