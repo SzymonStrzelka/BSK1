@@ -7,17 +7,18 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.Pane?>
 
-<AnchorPane prefHeight="400.0" prefWidth="447.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fxml.LogIn">
+<AnchorPane prefHeight="200.0" prefWidth="300.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="bsk.controllers.LoginController">
    <children>
-      <Pane prefHeight="400.0" prefWidth="601.0">
+      <Pane layoutX="3.0" layoutY="6.0" prefHeight="113.0" prefWidth="401.0">
          <children>
-            <Label layoutX="46.0" layoutY="92.0" prefHeight="40.0" prefWidth="100.0" text="Login:" />
-            <Label layoutX="46.0" layoutY="173.0" prefHeight="40.0" prefWidth="100.0" text="Password:" />
-            <PasswordField layoutX="223.0" layoutY="174.0" />
-            <TextField layoutX="223.0" layoutY="93.0" />
-            <Button defaultButton="true" layoutX="81.0" layoutY="274.0" mnemonicParsing="false" prefWidth="130.0" text="Log in" />
-            <Button cancelButton="true" layoutX="317.0" layoutY="274.0" mnemonicParsing="false" prefHeight="39.0" prefWidth="130.0" text="Cancel" />
+            <Label layoutX="31.0" layoutY="14.0" prefHeight="40.0" prefWidth="100.0" text="Login:" />
+            <Label layoutX="31.0" layoutY="66.0" prefHeight="40.0" prefWidth="100.0" text="Password:" />
+            <TextField fx:id="login" layoutX="223.0" layoutY="15.0" text="admin" />
+            <PasswordField fx:id="password" layoutX="223.0" layoutY="67.0" text="admin" />
          </children>
       </Pane>
+      <Button layoutX="20.0" layoutY="154.0" minHeight="23.0" mnemonicParsing="false" onAction="#verifyUser" prefHeight="32.0" prefWidth="110.0" text="Log in" />
+      <Button layoutX="145.0" layoutY="154.0" minHeight="23.0" mnemonicParsing="false" onAction="#addUser" prefHeight="32.0" prefWidth="110.0" text="Add user" />
+      <Button cancelButton="true" layoutX="270.0" layoutY="154.0" minHeight="32.0" mnemonicParsing="false" onAction="#closeApplication" prefHeight="32.0" prefWidth="110.0" text="Cancel" />
    </children>
 </AnchorPane>

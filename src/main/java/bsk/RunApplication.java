@@ -21,11 +21,11 @@ public class RunApplication extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        URL url = Paths.get("src/main/resources/fxml/MainWindow.fxml").toUri().toURL();
+        URL url = Paths.get("src/main/resources/fxml/Login.fxml").toUri().toURL();
         Pane mainWindow = FXMLLoader.load(url);
         Scene scene = new Scene(mainWindow);
 
-        primaryStage.setTitle("Data encryption application");
+        primaryStage.setTitle("Log in");
         primaryStage.setScene(scene);
         primaryStage.show();
         stage = primaryStage;
