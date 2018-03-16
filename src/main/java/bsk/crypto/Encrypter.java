@@ -1,5 +1,7 @@
 package bsk.crypto;
 
+import bsk.enums.CipherMode;
+
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import java.security.InvalidAlgorithmParameterException;
@@ -7,12 +9,15 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
 public class Encrypter {
+
     private Cipher cipher;
 
-    public Encrypter(SecretKey key) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException {
+    public Encrypter(SecretKey key, CipherMode cipherMode) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException {
         byte[] iv = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         IvParameterSpec ivspec = new IvParameterSpec(iv);
-        cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+
+        String mode = "AES/" + cipherMode.toString() + "/PKCS5PADDING";
+        cipher = Cipher.getInstance(mode);
         cipher.init(Cipher.ENCRYPT_MODE, key, ivspec);
     }
 
