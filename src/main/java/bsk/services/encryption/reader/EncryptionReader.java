@@ -81,19 +81,19 @@ public class EncryptionReader {
 
     private Map<String, byte[]> parseRecipients() throws XMLStreamException {
         Map<String, byte[]> recipientsKeys = new HashMap<>();
-        reader.next();
-        reader.next();
-        reader.next();
+        nextUntil("Recipient");
 
         while (true) {
             switch (reader.getEventType()) {
-                case XMLStreamReader.START_ELEMENT: //<Recipient>
+                case XMLStreamReader.START_ELEMENT:
                     reader.next();
                     String key = parseNode();
                     byte[] val = Base64.getDecoder().decode(parseNode());
                     recipientsKeys.put(key, val);
-                case XMLStreamReader.END_ELEMENT:   //</Recipients>
-                    return recipientsKeys;
+                    break;
+                case XMLStreamReader.END_ELEMENT:
+                    if (reader.getName().equals(QName.valueOf("Recipients")))
+                        return recipientsKeys;
             }
             reader.next();
         }
