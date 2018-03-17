@@ -54,12 +54,12 @@ public class LoginController {
             byte[] salt = passwordEncryptionService.generateSalt();
             userParserService.addUser(new User(login.getText(),
                     passwordEncryptionService.getEncryptedPassword(password.getText(), salt), salt));
+
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Information Dialog");
             alert.setHeaderText("Account created!");
             alert.setContentText("You can now log in!");
-
             alert.showAndWait();
+
         } catch (NoSuchAlgorithmException | InvalidKeySpecException | JAXBException e) {
             e.printStackTrace();
         }

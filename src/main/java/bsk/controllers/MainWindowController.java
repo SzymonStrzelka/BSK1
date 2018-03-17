@@ -1,33 +1,43 @@
 package bsk.controllers;
 
 import bsk.crypto.encrypter.CipherMode;
-import bsk.crypto.key.SessionKeyGenerator;
 import bsk.model.User;
 import bsk.services.encryption.EncryptionService;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
 import java.util.Collections;
+import java.lang.reflect.Array;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 
 public class MainWindowController {
-    private final SessionKeyGenerator generator;
     private final EncryptionService encryptionService;
 
     public MainWindowController() {
-        this.generator = new SessionKeyGenerator();
         this.encryptionService = new EncryptionService();
     }
 
     @FXML
     private Label statusLabelEncryption;
     @FXML
-    private ProgressBar encryptionProgressBar;
+    private RadioButton ECB;
+    @FXML
+    private RadioButton CBC;
+    @FXML
+    private RadioButton CFB;
+    @FXML
+    private RadioButton OFB;
     @FXML
     private ProgressBar decryptionProgressBar;
+    @FXML
+    private ProgressBar encryptionProgressBar;
     @FXML
     private Button decryptButton;
     @FXML
@@ -41,6 +51,8 @@ public class MainWindowController {
     private File decryptInFile;
     private File encryptOutFile;
     private File decryptOutFile;
+    @FXML
+    private CipherMode cipherMode;
 
     private User currentUser = new User("januszzzzzzzzzzzzzzzzzz", "password".getBytes(), "dddddddddddddddd".getBytes());
 
@@ -117,5 +129,14 @@ public class MainWindowController {
                     Alert alert = new Alert(Alert.AlertType.INFORMATION, "Decryption success", ButtonType.OK);
                     alert.showAndWait();
                 });
+    }
+
+    private CipherMode getSelectedRadio() {
+        RadioButton radioButtons[] = {ECB, CBC, CFB, OFB};
+        for (RadioButton rb : radioButtons) {
+            if (rb.isSelected())
+                return CipherMode.valueOf(rb.getId());
+        }
+        return null;
     }
 }

@@ -33,6 +33,5 @@ public class RunApplication extends Application {
 
     private void initialize(){
         mainWindowController = new MainWindowController();
-        mainWindowController.initialize(stage);
     }
 }
