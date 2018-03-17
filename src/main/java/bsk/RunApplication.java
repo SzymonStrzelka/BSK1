@@ -30,6 +30,7 @@ public class RunApplication extends Application {
         primaryStage.show();
         stage = primaryStage;
     }
+
     private void initialize(){
         mainWindowController = new MainWindowController();
     }

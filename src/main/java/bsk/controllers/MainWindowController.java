@@ -1,45 +1,24 @@
 package bsk.controllers;
 
-import bsk.crypto.Decrypter;
-import bsk.crypto.Encrypter;
-import bsk.crypto.SessionKeyGenerator;
-import io.reactivex.Observable;
-import io.reactivex.rxjavafx.schedulers.JavaFxScheduler;
-import io.reactivex.schedulers.Schedulers;
-import bsk.enums.CipherMode;
+import bsk.crypto.encrypter.CipherMode;
+import bsk.model.User;
+import bsk.services.encryption.EncryptionService;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
 import javafx.scene.control.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-import javax.crypto.SecretKey;
 import java.io.File;
-import java.lang.reflect.Array;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.util.Collections;
 
 public class MainWindowController {
-    private final SessionKeyGenerator generator;
+    private final EncryptionService encryptionService;
 
     public MainWindowController() {
-        this.generator = new SessionKeyGenerator();
+        this.encryptionService = new EncryptionService();
     }
 
-    @FXML
-    private Label statusLabelEncryption;
-    @FXML
-    private Label statusLabelDecryption;
-    @FXML
-    private RadioButton ECB;
-    @FXML
-    private RadioButton CBC;
-    @FXML
-    private RadioButton CFB;
-    @FXML
-    private RadioButton OFB;
     @FXML
     private ProgressBar decryptionProgressBar;
     @FXML
@@ -50,6 +29,8 @@ public class MainWindowController {
     private Label decryptInputFileLabel;
     @FXML
     private Label decryptOutputFileLabel;
+    @FXML
+    private ToggleGroup cipherModeGroup;
 
     private final FileChooser fileChooser = new FileChooser();
     private Stage stage;
@@ -57,10 +38,8 @@ public class MainWindowController {
     private File decryptInFile;
     private File encryptOutFile;
     private File decryptOutFile;
-    @FXML
-    private CipherMode cipherMode;
 
-    private SecretKey key;
+    private User currentUser = new User("januszzzzzzzzzzzzzzzzzz", "password".getBytes(), "dddddddddddddddd".getBytes());
 
     public void initialize(Stage stage) {
         this.stage = stage;
@@ -69,14 +48,12 @@ public class MainWindowController {
     public void openFileToEncryption(ActionEvent event) {
         encryptInFile = fileChooser.showOpenDialog(stage);
         if (encryptInFile != null) {
-            statusLabelEncryption.setText("Opened file " + encryptInFile.getName());
         }
     }
 
     public void chooseOutputFileEncryption(ActionEvent event) {
         encryptOutFile = fileChooser.showSaveDialog(stage);
         if (encryptOutFile != null) {
-            statusLabelEncryption.setText("Encrypted file will be saved as " + encryptOutFile.getName());
         }
     }
 
@@ -107,96 +84,37 @@ public class MainWindowController {
     }
 
     public void encrypt(ActionEvent event) {
-        Observable
-                .<Double>create(emitter -> {
-                    try (FileInputStream inputStream = new FileInputStream(encryptInFile);
-                         FileOutputStream outputStream = new FileOutputStream(encryptOutFile)) {
-                        key = generator.generate128BitKey();
-                        Encrypter encrypter = new Encrypter(key, getSelectedRadio());
+        encryptionService.encrypt(encryptInFile, encryptOutFile, getSelectedMode(), Collections.singletonList(currentUser),
+                progress -> encryptionProgressBar.setProgress(progress),
+                e -> {
+                    encryptionProgressBar.setProgress(0);
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "Encryption error", ButtonType.OK);
+                    alert.showAndWait();
+                },
+                () -> {
+                    encryptionProgressBar.setProgress(1);
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION, "Encryption success", ButtonType.OK);
+                    alert.showAndWait();
+                });
 
-                        int bytesRead;
-                        byte[] inputBytes = new byte[128];
-                        int totalBytesRead = 0;
-
-                        while ((bytesRead = inputStream.read(inputBytes)) != -1) {
-                            totalBytesRead += bytesRead;
-                            byte[] outputBytes = encrypter.encrypt(inputBytes, 0, bytesRead);
-                            if (outputBytes != null)
-                                outputStream.write(outputBytes);
-                        }
-                        double progress = (double) totalBytesRead / encryptInFile.length();
-                        emitter.onNext(progress);
-
-                        byte[] outputBytes = encrypter.end();
-                        if (outputBytes != null)
-                            outputStream.write(outputBytes);
-                        emitter.onComplete();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                })
-                .subscribeOn(Schedulers.io())
-                .observeOn(JavaFxScheduler.platform())
-                .subscribe(
-                        progress -> encryptionProgressBar.setProgress(progress),
-                        e -> {
-                            Alert alert = new Alert(Alert.AlertType.ERROR, "Encryption error", ButtonType.OK);
-                            alert.showAndWait();
-                        },
-                        () -> {
-                            Alert alert = new Alert(Alert.AlertType.INFORMATION, "Encryption successful", ButtonType.OK);
-                            alert.showAndWait();
-                        });
     }
 
     public void decrypt(ActionEvent event) {
-        Observable
-                .<Double>create(emitter -> {
-                    try (FileInputStream inputStream = new FileInputStream(decryptInFile);
-                         FileOutputStream outputStream = new FileOutputStream(decryptOutFile)) {
-                        Decrypter decrypter = new Decrypter(key);
-
-                        long totalBytesRead = 0;
-                        int readBytes;
-                        byte[] inputBytes = new byte[128];
-                        while ((readBytes = inputStream.read(inputBytes)) != -1) {
-                            totalBytesRead += readBytes;
-
-                            byte[] outputBytes = decrypter.decrypt(inputBytes, 0, readBytes);
-                            if (outputBytes != null)
-                                outputStream.write(outputBytes);
-
-                            double progress = (double) totalBytesRead / decryptInFile.length();
-                            emitter.onNext(progress);
-                        }
-                        byte[] outputBytes = decrypter.end();
-                        if (outputBytes != null)
-                            outputStream.write(outputBytes);
-                        emitter.onComplete();
-                    } catch (Exception e) {
-                        emitter.onError(e);
-                    }
-                })
-                .subscribeOn(Schedulers.io())
-                .observeOn(JavaFxScheduler.platform())
-                .subscribe(
-                        progress -> decryptionProgressBar.setProgress(progress),
-                        e -> {
-                            Alert alert = new Alert(Alert.AlertType.ERROR, "Decryption error", ButtonType.OK);
-                            alert.showAndWait();
-                        },
-                        () -> {
-                            Alert alert = new Alert(Alert.AlertType.INFORMATION, "Decryption successful", ButtonType.OK);
-                            alert.showAndWait();
-                        });
+        encryptionService.decrypt(decryptInFile, decryptOutFile, currentUser,
+                progress -> decryptionProgressBar.setProgress(progress),
+                e -> {
+                    decryptionProgressBar.setProgress(0);
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "Decryption error", ButtonType.OK);
+                    alert.showAndWait();
+                },
+                () -> {
+                    decryptionProgressBar.setProgress(1);
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION, "Decryption success", ButtonType.OK);
+                    alert.showAndWait();
+                });
     }
 
-    private CipherMode getSelectedRadio() {
-        RadioButton radioButtons[] = {ECB, CBC, CFB, OFB};
-        for (RadioButton rb : radioButtons) {
-            if (rb.isSelected())
-                return CipherMode.valueOf(rb.getId());
-        }
-        return null;
+    private CipherMode getSelectedMode() {
+        return CipherMode.valueOf((String) cipherModeGroup.getSelectedToggle().getUserData());
     }
 }
