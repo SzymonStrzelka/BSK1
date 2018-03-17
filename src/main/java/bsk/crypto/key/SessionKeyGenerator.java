@@ -1,4 +1,4 @@
-package bsk.crypto;
+package bsk.crypto.key;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
