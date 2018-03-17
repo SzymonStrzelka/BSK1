@@ -3,6 +3,7 @@ package bsk.services.encryption;
 import bsk.crypto.encrypter.CipherMode;
 import bsk.crypto.encrypter.Encrypter;
 import bsk.crypto.encrypter.EncrypterMode;
+import bsk.crypto.encrypter.EncryptionException;
 import bsk.crypto.key.SessionKeyGenerator;
 import bsk.model.Encryption;
 import bsk.model.User;
@@ -19,6 +20,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +33,9 @@ public class EncryptionService {
     private final EncryptionWriter encryptionWriter;
     private final EncryptionReader encryptionReader;
     private static final int BLOCK_SIZE = 128;
+    private static final String ALGORITHM = "AES";
+    private static final int KEY_SIZE = 128;
+    private static final String PADDING = "PKCS5Padding";
 
     public EncryptionService() {
         this.encrypter = new Encrypter();
@@ -48,24 +53,24 @@ public class EncryptionService {
                         Consumer<Throwable> onError,
                         Action onCompleted) {
 
-        byte[] initialVector = null;
-        if (cipherMode != CipherMode.ECB) {
-            Random random = new SecureRandom();
-            initialVector = new byte[16];
-            random.nextBytes(initialVector);
-        }
         SecretKey key = keyGenerator.generate128BitKey();
 
         Map<String, byte[]> recipientsKeys = new HashMap<>();
         recipients.forEach(login -> recipientsKeys.put(login, key.getEncoded()));
 
-        Encryption encryption = new Encryption("AES", 128, BLOCK_SIZE, cipherMode, "PKCS5Padding", initialVector, recipientsKeys);
-
         Observable
                 .<Double>create(emitter -> {
                     try (FileInputStream inputStream = new FileInputStream(inputFile)) {
 
-                        encrypter.init(key, encryption, EncrypterMode.ENCRYPTION);
+                        byte[] initialVector = generateInitialVector(cipherMode);
+
+                        encrypter.init(key, ALGORITHM, cipherMode, PADDING, initialVector, EncrypterMode.ENCRYPTION);
+
+                        byte[] ext = encryptExtension(inputFile.getName());
+
+                        Encryption encryption = new Encryption(ALGORITHM, KEY_SIZE, BLOCK_SIZE, cipherMode, PADDING,
+                                initialVector, ext, recipientsKeys);
+
                         encryptionWriter.writeHeader(outputFile, encryption);
 
                         long totalBytesRead = 0;
@@ -109,11 +114,12 @@ public class EncryptionService {
                 .<Double>create(emitter -> {
                     try (FileOutputStream outputStream = new FileOutputStream(outputFile)) {
 
-                        Encryption encryption = encryptionReader.readHeader(inputFile);
+                        Encryption e = encryptionReader.readHeader(inputFile);
 
-                        byte[] key = encryption.getRecipientsKeys().get(currentUser.getLogin());
-                        SecretKeySpec keySpec = new SecretKeySpec(key, encryption.getAlgorithm());
-                        encrypter.init(keySpec, encryption, EncrypterMode.DECRYPTION);
+                        byte[] key = e.getRecipientsKeys().get(currentUser.getLogin());
+                        SecretKeySpec keySpec = new SecretKeySpec(key, e.getAlgorithm());
+                        encrypter.init(keySpec, e.getAlgorithm(), e.getCipherMode(), e.getPadding(),
+                                e.getInitialVector(), EncrypterMode.DECRYPTION);
 
                         long totalBytesRead = 0;
                         int readBytes;
@@ -133,6 +139,14 @@ public class EncryptionService {
                         byte[] outputBytes = encrypter.finish();
                         if (outputBytes != null)
                             outputStream.write(outputBytes);
+                        outputStream.close();
+
+                        byte[] encryptedExt = e.getEncryptedExtension();
+                        if (encryptedExt != null) {
+                            String fileExtension = decryptExtension(encryptedExt);
+                            String newFileName = outputFile.getName() + "." + fileExtension;
+                            outputFile.renameTo(new File(newFileName));
+                        }
 
                         emitter.onComplete();
                     } catch (Exception e) {
@@ -142,5 +156,42 @@ public class EncryptionService {
                 .subscribeOn(Schedulers.io())
                 .observeOn(JavaFxScheduler.platform())
                 .subscribe(onProgressChanged, onError, onCompleted);
+    }
+
+    private String getFileExtension(String fileName) {
+        int i = fileName.lastIndexOf('.');
+        if (i > 0) {
+            return fileName.substring(i + 1);
+        }
+        return null;
+    }
+
+    private byte[] encryptExtension(String filename) throws EncryptionException {
+        String ext = getFileExtension(filename);
+        if (ext == null) {
+            return null;
+        } else {
+            byte[] extBytes = ext.getBytes(StandardCharsets.UTF_8);
+            encrypter.process(extBytes, 0, extBytes.length);
+            return encrypter.finish();
+        }
+    }
+
+    private String decryptExtension(byte[] encryptedExt) throws EncryptionException {
+        if (encryptedExt == null)
+            return "";
+        encrypter.process(encryptedExt, 0, encryptedExt.length);
+        byte[] decryptedExt = encrypter.finish();
+        return new String(decryptedExt, StandardCharsets.UTF_8);
+    }
+
+    private byte[] generateInitialVector(CipherMode cipherMode) {
+        byte[] initialVector = null;
+        if (cipherMode != CipherMode.ECB) {
+            Random random = new SecureRandom();
+            initialVector = new byte[16];
+            random.nextBytes(initialVector);
+        }
+        return initialVector;
     }
 }

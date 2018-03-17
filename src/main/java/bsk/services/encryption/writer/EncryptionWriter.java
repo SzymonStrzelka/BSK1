@@ -34,6 +34,8 @@ public class EncryptionWriter {
             writeNode("Padding", encryption.getPadding());
             String iv = encryption.getInitialVector() == null ? "" : Base64.getEncoder().encodeToString(encryption.getInitialVector());
             writeNode("InitialVector", iv);
+            String ext = encryption.getEncryptedExtension() == null ? "" : Base64.getEncoder().encodeToString(encryption.getEncryptedExtension());
+            writeNode("Extension", ext);
             writer.writeStartElement("Recipients");
             for (Map.Entry<String, byte[]> recipientKey : encryption.getRecipientsKeys().entrySet()) {
                 writer.writeStartElement("Recipient");

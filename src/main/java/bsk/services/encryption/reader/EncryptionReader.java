@@ -58,10 +58,12 @@ public class EncryptionReader {
         String padding = parseNode();
         String ivString = parseNode();
         byte[] initialVector = ivString.isEmpty() ? null : Base64.getDecoder().decode(ivString);
+        String extString = parseNode();
+        byte[] ext = extString.isEmpty() ? null : Base64.getDecoder().decode(extString);
         Map<String, byte[]> recipientsKeys = parseRecipients();
 
         setInputStream();
-        return new Encryption(algorithm, keySize, blockSize, cipherMode, padding, initialVector, recipientsKeys);
+        return new Encryption(algorithm, keySize, blockSize, cipherMode, padding, initialVector, ext, recipientsKeys);
     }
 
     private void nextUntil(String name) throws XMLStreamException {
