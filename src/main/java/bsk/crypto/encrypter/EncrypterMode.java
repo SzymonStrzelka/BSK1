@@ -3,7 +3,7 @@ package bsk.crypto.encrypter;
 public enum EncrypterMode {
     ENCRYPTION, DECRYPTION;
 
-    public int toCipherMode() {
+    public int intValue() {
         switch (this) {
             case ENCRYPTION:
                 return 1;

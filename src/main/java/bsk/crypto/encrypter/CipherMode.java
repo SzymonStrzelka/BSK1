@@ -1,5 +1,8 @@
 package bsk.crypto.encrypter;
 
 public enum CipherMode {
-    EBC, CBC
+    ECB,
+    CBC,
+    CFB,
+    OFB
 }

@@ -1,5 +1,6 @@
 package bsk.services.encryption.reader;
 
+import bsk.crypto.encrypter.CipherMode;
 import bsk.model.Encryption;
 
 import javax.xml.namespace.QName;
@@ -53,9 +54,10 @@ public class EncryptionReader {
         String algorithm = parseNode();
         int keySize = Integer.valueOf(parseNode());
         int blockSize = Integer.valueOf(parseNode());
-        String cipherMode = parseNode();
+        CipherMode cipherMode = CipherMode.valueOf(parseNode());
         String padding = parseNode();
-        byte[] initialVector = Base64.getDecoder().decode(parseNode());
+        String ivString = parseNode();
+        byte[] initialVector = ivString.isEmpty() ? null : Base64.getDecoder().decode(ivString);
         Map<String, byte[]> recipientsKeys = parseRecipients();
 
         setInputStream();

@@ -12,10 +12,17 @@ public class Encrypter {
 
     public void init(SecretKey key, Encryption e, EncrypterMode mode) throws EncrypterInitializationException {
         try {
-            IvParameterSpec ivSpec = new IvParameterSpec(e.getInitialVector());
+            IvParameterSpec ivSpec = null;
+            if (!e.getCipherMode().equals(CipherMode.ECB)) {
+                ivSpec = new IvParameterSpec(e.getInitialVector());
+            }
             String settings = String.format("%s/%s/%s", e.getAlgorithm(), e.getCipherMode(), e.getPadding());
             cipher = Cipher.getInstance(settings);
-            cipher.init(mode.toCipherMode(), key, ivSpec);
+            if (ivSpec == null) {
+                cipher.init(mode.intValue(), key);
+            } else {
+                cipher.init(mode.intValue(), key, ivSpec);
+            }
         } catch (Exception ex) {
             throw new EncrypterInitializationException("Initialization failed", ex);
         }

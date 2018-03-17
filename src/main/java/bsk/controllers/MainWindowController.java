@@ -5,17 +5,12 @@ import bsk.model.User;
 import bsk.services.encryption.EncryptionService;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
 import javafx.scene.control.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
 import java.util.Collections;
-import java.lang.reflect.Array;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 
 public class MainWindowController {
     private final EncryptionService encryptionService;
@@ -24,16 +19,6 @@ public class MainWindowController {
         this.encryptionService = new EncryptionService();
     }
 
-    @FXML
-    private Label statusLabelEncryption;
-    @FXML
-    private RadioButton ECB;
-    @FXML
-    private RadioButton CBC;
-    @FXML
-    private RadioButton CFB;
-    @FXML
-    private RadioButton OFB;
     @FXML
     private ProgressBar decryptionProgressBar;
     @FXML
@@ -44,6 +29,8 @@ public class MainWindowController {
     private Label decryptInputFileLabel;
     @FXML
     private Label decryptOutputFileLabel;
+    @FXML
+    private ToggleGroup cipherModeGroup;
 
     private final FileChooser fileChooser = new FileChooser();
     private Stage stage;
@@ -51,8 +38,6 @@ public class MainWindowController {
     private File decryptInFile;
     private File encryptOutFile;
     private File decryptOutFile;
-    @FXML
-    private CipherMode cipherMode;
 
     private User currentUser = new User("januszzzzzzzzzzzzzzzzzz", "password".getBytes(), "dddddddddddddddd".getBytes());
 
@@ -63,14 +48,12 @@ public class MainWindowController {
     public void openFileToEncryption(ActionEvent event) {
         encryptInFile = fileChooser.showOpenDialog(stage);
         if (encryptInFile != null) {
-            statusLabelEncryption.setText("Opened file " + encryptInFile.getName());
         }
     }
 
     public void chooseOutputFileEncryption(ActionEvent event) {
         encryptOutFile = fileChooser.showSaveDialog(stage);
         if (encryptOutFile != null) {
-            statusLabelEncryption.setText("Encrypted file will be saved as " + encryptOutFile.getName());
         }
     }
 
@@ -101,7 +84,7 @@ public class MainWindowController {
     }
 
     public void encrypt(ActionEvent event) {
-        encryptionService.encrypt(encryptInFile, encryptOutFile, CipherMode.CBC, Collections.singletonList(currentUser),
+        encryptionService.encrypt(encryptInFile, encryptOutFile, getSelectedMode(), Collections.singletonList(currentUser),
                 progress -> encryptionProgressBar.setProgress(progress),
                 e -> {
                     encryptionProgressBar.setProgress(0);
@@ -131,12 +114,7 @@ public class MainWindowController {
                 });
     }
 
-    private CipherMode getSelectedRadio() {
-        RadioButton radioButtons[] = {ECB, CBC, CFB, OFB};
-        for (RadioButton rb : radioButtons) {
-            if (rb.isSelected())
-                return CipherMode.valueOf(rb.getId());
-        }
-        return null;
+    private CipherMode getSelectedMode() {
+        return CipherMode.valueOf((String) cipherModeGroup.getSelectedToggle().getUserData());
     }
 }

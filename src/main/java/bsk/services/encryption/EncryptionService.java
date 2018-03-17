@@ -48,15 +48,18 @@ public class EncryptionService {
                         Consumer<Throwable> onError,
                         Action onCompleted) {
 
-        Random random = new SecureRandom();
-        final byte[] initialVector = new byte[16];
-        random.nextBytes(initialVector);
+        byte[] initialVector = null;
+        if (cipherMode != CipherMode.ECB) {
+            Random random = new SecureRandom();
+            initialVector = new byte[16];
+            random.nextBytes(initialVector);
+        }
         SecretKey key = keyGenerator.generate128BitKey();
 
         Map<String, byte[]> recipientsKeys = new HashMap<>();
         recipients.forEach(user -> recipientsKeys.put(user.getLogin(), key.getEncoded()));
 
-        Encryption encryption = new Encryption("AES", 128, BLOCK_SIZE, cipherMode.name(), "PKCS5Padding", initialVector, recipientsKeys);
+        Encryption encryption = new Encryption("AES", 128, BLOCK_SIZE, cipherMode, "PKCS5Padding", initialVector, recipientsKeys);
 
         Observable
                 .<Double>create(emitter -> {

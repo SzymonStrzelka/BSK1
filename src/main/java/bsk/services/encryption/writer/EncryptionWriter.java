@@ -30,9 +30,10 @@ public class EncryptionWriter {
             writeNode("Algorithm", encryption.getAlgorithm());
             writeNode("KeySize", String.valueOf(encryption.getKeySize()));
             writeNode("BlockSize", String.valueOf(encryption.getBlockSize()));
-            writeNode("CipherMode", encryption.getCipherMode());
+            writeNode("CipherMode", encryption.getCipherMode().name());
             writeNode("Padding", encryption.getPadding());
-            writeNode("InitialVector", Base64.getEncoder().encodeToString(encryption.getInitialVector()));
+            String iv = encryption.getInitialVector() == null ? "" : Base64.getEncoder().encodeToString(encryption.getInitialVector());
+            writeNode("InitialVector", iv);
             writer.writeStartElement("Recipients");
             for (Map.Entry<String, byte[]> recipientKey : encryption.getRecipientsKeys().entrySet()) {
                 writer.writeStartElement("Recipient");
