@@ -8,6 +8,8 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class UserParserService {
 
@@ -34,6 +36,12 @@ public class UserParserService {
         //ZAPIS DO PLIKU
         jaxbMarshaller.marshal(users, new File(usersFilePath));
     }
+
+    public List<String> getUsernames() throws JAXBException {
+        users = getUsersFromXml();
+        return users.getUserList().stream().map(User::getLogin).collect(Collectors.toList());
+    }
+
     private Users getUsersFromXml() throws JAXBException {
         File file = new File(usersFilePath);
         JAXBContext jaxbContext = JAXBContext.newInstance(Users.class);
@@ -42,4 +50,5 @@ public class UserParserService {
 
         return (Users) jaxbUnmarshaller.unmarshal(file);
     }
+
 }

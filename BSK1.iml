@@ -17,5 +17,6 @@
     <orderEntry type="library" name="Maven: org.reactivestreams:reactive-streams:1.0.2" level="project" />
     <orderEntry type="library" name="Maven: io.reactivex.rxjava2:rxjavafx:2.2.2" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.projectlombok:lombok:1.16.20" level="project" />
+    <orderEntry type="library" name="Maven: org.controlsfx:controlsfx:8.40.14" level="project" />
   </component>
 </module>

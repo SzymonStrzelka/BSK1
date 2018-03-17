@@ -43,7 +43,7 @@ public class EncryptionService {
     public void encrypt(File inputFile,
                         File outputFile,
                         CipherMode cipherMode,
-                        List<User> recipients,
+                        List<String> recipients,
                         Consumer<Double> onProgressChanged,
                         Consumer<Throwable> onError,
                         Action onCompleted) {
@@ -57,7 +57,7 @@ public class EncryptionService {
         SecretKey key = keyGenerator.generate128BitKey();
 
         Map<String, byte[]> recipientsKeys = new HashMap<>();
-        recipients.forEach(user -> recipientsKeys.put(user.getLogin(), key.getEncoded()));
+        recipients.forEach(login -> recipientsKeys.put(login, key.getEncoded()));
 
         Encryption encryption = new Encryption("AES", 128, BLOCK_SIZE, cipherMode, "PKCS5Padding", initialVector, recipientsKeys);
 
@@ -110,11 +110,6 @@ public class EncryptionService {
                     try (FileOutputStream outputStream = new FileOutputStream(outputFile)) {
 
                         Encryption encryption = encryptionReader.readHeader(inputFile);
-
-                        if (!encryption.getRecipientsKeys().containsKey(currentUser.getLogin())) {
-                            emitter.onError(new NotRecipientException("User is not a recipient of encryption"));
-                            return;
-                        }
 
                         byte[] key = encryption.getRecipientsKeys().get(currentUser.getLogin());
                         SecretKeySpec keySpec = new SecretKeySpec(key, encryption.getAlgorithm());

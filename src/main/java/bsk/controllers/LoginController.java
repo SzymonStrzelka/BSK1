@@ -20,17 +20,20 @@ import java.net.URL;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.List;
 
 
 public class LoginController {
 
     @FXML
-    TextField login;
+    private TextField login;
     @FXML
-    PasswordField password;
+    private PasswordField password;
 
     private UserParserService userParserService;
     private PasswordEncryptionService passwordEncryptionService;
+    private User currentUser;
+
 
     public LoginController() {
         userParserService = new UserParserService();
@@ -41,8 +44,10 @@ public class LoginController {
         try {
             User user = userParserService.getUser(login.getText());
             if (user != null) {
-                if (passwordEncryptionService.authenticate(password.getText(), user.getPassword(), user.getSalt()))
+                if (passwordEncryptionService.authenticate(password.getText(), user.getPassword(), user.getSalt())) {
+                    currentUser = user;
                     openMainWindow(event);
+                }
             }
         } catch (NoSuchAlgorithmException | JAXBException | InvalidKeySpecException e) {
             e.printStackTrace();
@@ -72,17 +77,33 @@ public class LoginController {
         stage.close();
     }
 
+    List<String> getUsernames() {
+        try {
+            return userParserService.getUsernames();
+        } catch (JAXBException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    User getCurrentUser() {
+        return currentUser;
+    }
+
     private void openMainWindow(ActionEvent event) {
         Parent root;
         try {
-            URL url = Paths.get("src/main/resources/fxml/MainWindow.fxml").toUri().toURL();
-            root = FXMLLoader.load(url);
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/MainWindow.fxml"));
+            root = fxmlLoader.load();
             Stage stage = new Stage();
             stage.setTitle("Data encryption application");
             stage.setScene(new Scene(root, 520, 580));
             stage.show();
+
             // Hide this current window (if this is what you want)
             ((Node) (event.getSource())).getScene().getWindow().hide();
+            MainWindowController mainWindowController = fxmlLoader.getController();
+            mainWindowController.setLoginController(this);
         } catch (IOException e) {
             e.printStackTrace();
         }

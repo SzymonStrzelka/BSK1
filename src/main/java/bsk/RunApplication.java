@@ -12,9 +12,6 @@ import java.nio.file.Paths;
 
 public class RunApplication extends Application {
 
-    private Stage stage;
-    private MainWindowController mainWindowController;
-
     public static void main(String[] args) {
         Application.launch(args);
     }
@@ -28,10 +25,5 @@ public class RunApplication extends Application {
         primaryStage.setTitle("Log in");
         primaryStage.setScene(scene);
         primaryStage.show();
-        stage = primaryStage;
-    }
-
-    private void initialize(){
-        mainWindowController = new MainWindowController();
     }
 }
