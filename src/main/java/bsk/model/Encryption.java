@@ -14,5 +14,6 @@ public class Encryption {
     private final CipherMode cipherMode;
     private final String padding;
     private final byte[] initialVector;
+    private final byte[] encryptedExtension;
     private final Map<String, byte[]> recipientsKeys;
 }
