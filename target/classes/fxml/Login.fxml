@@ -17,8 +17,8 @@
             <PasswordField fx:id="password" layoutX="223.0" layoutY="67.0" text="admin" />
          </children>
       </Pane>
-      <Button layoutX="20.0" layoutY="154.0" minHeight="23.0" mnemonicParsing="false" onAction="#verifyUser" prefHeight="32.0" prefWidth="110.0" text="Log in" />
-      <Button layoutX="145.0" layoutY="154.0" minHeight="23.0" mnemonicParsing="false" onAction="#addUser" prefHeight="32.0" prefWidth="110.0" text="Add user" />
+      <Button layoutX="20.0" layoutY="154.0" minHeight="23.0" mnemonicParsing="false" onAction="#logIn" prefHeight="32.0" prefWidth="110.0" text="Log in" />
+      <Button layoutX="145.0" layoutY="154.0" minHeight="23.0" mnemonicParsing="false" onAction="#createAccount" prefHeight="32.0" prefWidth="110.0" text="Add user" />
       <Button cancelButton="true" layoutX="270.0" layoutY="154.0" minHeight="32.0" mnemonicParsing="false" onAction="#closeApplication" prefHeight="32.0" prefWidth="110.0" text="Cancel" />
    </children>
 </AnchorPane>

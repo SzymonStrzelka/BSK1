@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-public class EncryptionService {
+public class FileEncryptionService {
     private final Encrypter encrypter;
     private final SessionKeyGenerator keyGenerator;
     private final EncryptionWriter encryptionWriter;
@@ -37,7 +37,7 @@ public class EncryptionService {
     private static final int KEY_SIZE = 128;
     private static final String PADDING = "PKCS5Padding";
 
-    public EncryptionService() {
+    public FileEncryptionService() {
         this.encrypter = new Encrypter();
         this.keyGenerator = new SessionKeyGenerator();
         this.encryptionWriter = new EncryptionWriter();
@@ -80,7 +80,7 @@ public class EncryptionService {
                         while ((readBytes = inputStream.read(inputBytes)) != -1) {
                             totalBytesRead += readBytes;
 
-                            byte[] outputBytes = encrypter.process(inputBytes, 0, readBytes);
+                            byte[] outputBytes = encrypter.step(inputBytes, 0, readBytes);
                             if (outputBytes != null)
                                 encryptionWriter.writeData(outputBytes);
 
@@ -128,7 +128,7 @@ public class EncryptionService {
                         while ((readBytes = encryptionReader.readData(inputBytes)) != -1) {
                             totalBytesRead += readBytes;
 
-                            byte[] outputBytes = encrypter.process(inputBytes, 0, readBytes);
+                            byte[] outputBytes = encrypter.step(inputBytes, 0, readBytes);
                             if (outputBytes != null)
                                 outputStream.write(outputBytes);
 
@@ -172,7 +172,7 @@ public class EncryptionService {
             return null;
         } else {
             byte[] extBytes = ext.getBytes(StandardCharsets.UTF_8);
-            encrypter.process(extBytes, 0, extBytes.length);
+            encrypter.step(extBytes, 0, extBytes.length);
             return encrypter.finish();
         }
     }
@@ -180,7 +180,7 @@ public class EncryptionService {
     private String decryptExtension(byte[] encryptedExt) throws EncryptionException {
         if (encryptedExt == null)
             return "";
-        encrypter.process(encryptedExt, 0, encryptedExt.length);
+        encrypter.step(encryptedExt, 0, encryptedExt.length);
         byte[] decryptedExt = encrypter.finish();
         return new String(decryptedExt, StandardCharsets.UTF_8);
     }

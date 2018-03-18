@@ -1,16 +1,21 @@
 package bsk.services;
 
+import bsk.crypto.encrypter.*;
 import bsk.model.User;
 
-import java.io.FileNotFoundException;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.security.*;
+import java.security.Key;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 
 public class KeyPairService {
 
     private FileOutputStream fileOutputStream;
     private final KeyPairGenerator kpg;
+    private final Encrypter encrypter;
     private final String pubKeyDirectory = "src/main/resources/pki/public/";
     private final String pvtKeyDirectory = "src/main/resources/pki/private/";
     private final String pubKeyExtension = ".key";
@@ -20,43 +25,33 @@ public class KeyPairService {
     public KeyPairService() throws NoSuchAlgorithmException {
         kpg = KeyPairGenerator.getInstance("RSA");
         kpg.initialize(2048);
+        encrypter = new Encrypter();
     }
 
-    public void generateKeyPair(User user){
+    public void generateKeyPair(User user) throws EncrypterInitializationException, EncryptionException, IOException {
         KeyPair kp = kpg.generateKeyPair();
 
-        //public key
-        Key pub = kp.getPublic();
-        savePubKeyToFile(user, pub);
+        SecretKeySpec keySpec = new SecretKeySpec(user.getPassword(), "AES");
+        encrypter.init(keySpec, "AES", CipherMode.ECB, "PKCS5Padding", null, EncrypterMode.ENCRYPTION);
 
-        //add path and format to user xml
-        user.setPubKeyLocation(pubKeyDirectory + user.getLogin() + pubKeyExtension);
+        Key pub = kp.getPublic();
+        String pubLocation = pubKeyDirectory + user.getLogin() + pubKeyExtension;
+        saveKeyToFile(pubLocation, pub.getEncoded());
+
+        user.setPubKeyLocation(pubLocation);
         user.setPubKeyFormat(pub.getFormat());
 
-        //private key
         Key pvt = kp.getPrivate();
-        savePvtKeyToFile(user, pvt);
+        byte[] encPvt = encrypter.process(pvt.getEncoded());
+        String pvtLocation = pvtKeyDirectory + user.getLogin() + pvtKeyExtension;
+        saveKeyToFile(pvtLocation, encPvt);
 
-        //add path and format to user xml
-        user.setPvtKeyLocation(pubKeyDirectory + user.getLogin() + pvtKeyExtension);
+        user.setPvtKeyLocation(pvtLocation);
         user.setPvtKeyFormat(pvt.getFormat());
     }
-    private void savePubKeyToFile(User user, Key key){
-        try {
-            fileOutputStream = new FileOutputStream(pubKeyDirectory + user.getLogin()
-                    + pubKeyExtension);
-            fileOutputStream.write(key.getEncoded());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    private void savePvtKeyToFile(User user, Key key){
-        try {
-            fileOutputStream = new FileOutputStream(pvtKeyDirectory + user.getLogin()
-                    + pvtKeyExtension);
-            fileOutputStream.write(key.getEncoded());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+    private void saveKeyToFile(String path, byte[] key) throws IOException {
+        fileOutputStream = new FileOutputStream(path);
+        fileOutputStream.write(key);
     }
 }

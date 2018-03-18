@@ -1,6 +1,5 @@
 package bsk;
 
-import bsk.controllers.MainWindowController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;

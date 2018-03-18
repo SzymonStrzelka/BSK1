@@ -27,7 +27,15 @@ public class Encrypter {
         }
     }
 
-    public byte[] process(byte[] data, int offset, int length) throws EncryptionException {
+    public byte[] process(byte[] data) throws EncryptionException {
+        try {
+            return cipher.doFinal(data);
+        } catch (Exception e) {
+            throw new EncryptionException("Error processing data", e);
+        }
+    }
+
+    public byte[] step(byte[] data, int offset, int length) throws EncryptionException {
         try {
             return cipher.update(data, offset, length);
         } catch (Exception e) {
@@ -39,7 +47,7 @@ public class Encrypter {
         try {
             return cipher.doFinal();
         } catch (Exception e) {
-            throw new EncryptionException("Error while trying to finish", e);
+            throw new EncryptionException("Error while trying to finish processing", e);
         }
     }
 }

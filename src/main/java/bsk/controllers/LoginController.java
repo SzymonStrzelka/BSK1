@@ -17,8 +17,6 @@ import javafx.stage.Stage;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
-import java.net.URL;
-import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.List;
@@ -43,38 +41,44 @@ public class LoginController {
         keyPairService = new KeyPairService();
     }
 
-    public void verifyUser(ActionEvent event) {
+    public void logIn(ActionEvent event) {
         try {
             User user = userParserService.getUser(login.getText());
-            if (user != null) {
+            if (user == null) {
+                showError("User not found", "User with that name does not exist");
+            } else {
                 if (passwordEncryptionService.authenticate(password.getText(), user.getPassword(), user.getSalt())) {
                     currentUser = user;
                     openMainWindow(event);
+                } else {
+                    showError("Log in failure", "Bad credentials");
                 }
             }
         } catch (NoSuchAlgorithmException | JAXBException | InvalidKeySpecException e) {
             e.printStackTrace();
+            showError("Log in failure", "An error occurred while trying to log in");
         }
     }
 
-    public void addUser(ActionEvent event) {
+    public void createAccount(ActionEvent event) {
         try {
-            byte[] salt = passwordEncryptionService.generateSalt();
-            User newUser = new User(login.getText(),
-                    passwordEncryptionService.getEncryptedPassword(password.getText(), salt), salt);
-            //generate keys
-            keyPairService.generateKeyPair(newUser);
+            User user = userParserService.getUser(login.getText());
+            if (user == null) {
+                byte[] salt = passwordEncryptionService.generateSalt();
+                User newUser = new User(login.getText(),
+                        passwordEncryptionService.getEncryptedPassword(password.getText(), salt), salt);
+                //generate keys
+                keyPairService.generateKeyPair(newUser);
 
-            userParserService.addUser(newUser);
+                userParserService.addUser(newUser);
 
-
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setHeaderText("Account created!");
-            alert.setContentText("You can now log in!");
-            alert.showAndWait();
-
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException | JAXBException e) {
+                showInfo("Account created!", "You can now log in!");
+            } else {
+                showError("Account creation failure", "User with that name already exists");
+            }
+        } catch (Exception e) {
             e.printStackTrace();
+            showError("Account creation failure", "An error occurred while trying to create account");
         }
     }
 
@@ -96,6 +100,20 @@ public class LoginController {
 
     User getCurrentUser() {
         return currentUser;
+    }
+
+    private void showError(String header, String content) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+    private void showInfo(String header, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 
     private void openMainWindow(ActionEvent event) {

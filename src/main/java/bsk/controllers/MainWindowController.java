@@ -2,7 +2,7 @@ package bsk.controllers;
 
 import bsk.crypto.encrypter.CipherMode;
 import bsk.model.User;
-import bsk.services.encryption.EncryptionService;
+import bsk.services.encryption.FileEncryptionService;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -43,7 +43,7 @@ public class MainWindowController {
 
     private final FileChooser fileChooser = new FileChooser();
     private final Stage stage = new Stage();
-    private final EncryptionService encryptionService = new EncryptionService();
+    private final FileEncryptionService fileEncryptionService = new FileEncryptionService();
     private LoginController loginController;
     private File encryptInFile;
     private File decryptInFile;
@@ -98,7 +98,7 @@ public class MainWindowController {
     }
 
     public void encrypt(ActionEvent event) {
-        encryptionService.encrypt(encryptInFile, encryptOutFile, getSelectedMode(), getRecipients(),
+        fileEncryptionService.encrypt(encryptInFile, encryptOutFile, getSelectedMode(), getRecipients(),
                 progress -> encryptionProgressBar.setProgress(progress),
                 e -> {
                     encryptionProgressBar.setProgress(0);
@@ -114,7 +114,7 @@ public class MainWindowController {
     }
 
     public void decrypt(ActionEvent event) {
-        encryptionService.decrypt(decryptInFile, decryptOutFile, currentUser,
+        fileEncryptionService.decrypt(decryptInFile, decryptOutFile, currentUser,
                 progress -> decryptionProgressBar.setProgress(progress),
                 e -> {
                     decryptionProgressBar.setProgress(0);

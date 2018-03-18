@@ -1,12 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.PasswordField?>
-<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.Pane?>
-
 <AnchorPane prefHeight="200.0" prefWidth="300.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="bsk.controllers.LoginController">
    <children>
       <Pane layoutX="3.0" layoutY="6.0" prefHeight="113.0" prefWidth="401.0">
@@ -17,8 +13,10 @@
             <PasswordField fx:id="password" layoutX="223.0" layoutY="67.0" text="admin" />
          </children>
       </Pane>
-      <Button layoutX="20.0" layoutY="154.0" minHeight="23.0" mnemonicParsing="false" onAction="#verifyUser" prefHeight="32.0" prefWidth="110.0" text="Log in" />
-      <Button layoutX="145.0" layoutY="154.0" minHeight="23.0" mnemonicParsing="false" onAction="#addUser" prefHeight="32.0" prefWidth="110.0" text="Add user" />
+      <Button layoutX="20.0" layoutY="154.0" minHeight="23.0" mnemonicParsing="false" onAction="#logIn"
+              prefHeight="32.0" prefWidth="110.0" text="Log in"/>
+      <Button layoutX="145.0" layoutY="154.0" minHeight="23.0" mnemonicParsing="false" onAction="#createAccount"
+              prefHeight="32.0" prefWidth="110.0" text="Add user"/>
       <Button cancelButton="true" layoutX="270.0" layoutY="154.0" minHeight="32.0" mnemonicParsing="false" onAction="#closeApplication" prefHeight="32.0" prefWidth="110.0" text="Cancel" />
    </children>
 </AnchorPane>
