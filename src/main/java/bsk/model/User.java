@@ -1,47 +1,41 @@
 package bsk.model;
 
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "user")
+@XmlAccessorType(XmlAccessType.FIELD)
+@Getter
+@Setter
 public class User{
-    private String login;
-    private byte[] password;
-    private byte[] salt;
 
+    @XmlElement(name = "login")
+    private String login;
+    @XmlElement(name = "password")
+    private byte[] password;
+    @XmlElement(name = "salt")
+    private byte[] salt;
+    @XmlElement(name = "pubKeyLocation")
+    private String pubKeyLocation;
+    @XmlElement(name = "pubKeyFormat")
+    private String pubKeyFormat;
+    @XmlElement(name = "pvtKeyLocation")
+    private String pvtKeyLocation;
+    @XmlElement(name = "pvtKeyFormat")
+    private String pvtKeyFormat;
+
+    public User(){
+        salt = new byte[8];
+    }
     public User(String login, byte[] password, byte[] salt) {
         this.login = login;
         this.password = password;
-        this.salt = salt;
-    }
-    public User(){
-        salt = new byte[8];
-    };
-
-    @XmlElement(name = "login")
-    public String getLogin() {
-        return login;
-    }
-
-    @XmlElement(name = "password")
-    public byte[] getPassword() {
-        return password;
-    }
-
-    public void setLogin(String login){
-        this.login = login;
-    }
-
-    public void setPassword(byte[] password){
-        this.password = password;
-    }
-
-    @XmlElement(name = "salt")
-    public byte[] getSalt() {
-        return salt;
-    }
-
-    public void setSalt(byte[] salt) {
         this.salt = salt;
     }
 }

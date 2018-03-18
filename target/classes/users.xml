@@ -11,43 +11,12 @@
         <salt>MpnlsgahXqk=</salt>
     </user>
     <user>
-        <login>AD</login>
-        <password>1K4ZdOmwzXTP0wyeKxRADWma++k=</password>
-        <salt>0+3gbwPAxJg=</salt>
-    </user>
-    <user>
-        <login>1</login>
-        <password>16SOTaFC9Qx73zgd+Iw7SR3H1No=</password>
-        <salt>xfk3NRiR9Xo=</salt>
-    </user>
-    <user>
-        <login>2</login>
-        <password>+HGp/dwQ4Veasp5rBm/e9TJ4raI=</password>
-        <salt>RSkk9Zc+9kc=</salt>
-    </user>
-    <user>
-        <login>3</login>
-        <password>DWo/F7D8ReA2siPIAHM/YEn9/kk=</password>
-        <salt>MJ1Vni0eNdk=</salt>
-    </user>
-    <user>
-        <login>4</login>
-        <password>95Rv4J6b3LNS4D/vBe2wiMiBGGw=</password>
-        <salt>IA2qqUFFzFI=</salt>
-    </user>
-    <user>
-        <login>5</login>
-        <password>FgEHcJ4SQ6U3KXqgnoQECtnSVeE=</password>
-        <salt>HccSndi4qag=</salt>
-    </user>
-    <user>
-        <login>6</login>
-        <password>Y5YA7D1m4LqnZPUWw9TiUxm+hoM=</password>
-        <salt>Ma/nsGd5pOs=</salt>
-    </user>
-    <user>
-        <login>7</login>
-        <password>ZIn+mHa/8KebpApMo15+2Gh8RR0=</password>
-        <salt>40bTMARWBOI=</salt>
+        <login>admin10</login>
+        <password>0jMi82aE36EGGuzLuj709YnaGVE=</password>
+        <salt>iigEx46SX4o=</salt>
+        <pubKeyLocation>src/main/resources/pki/public/admin10.key</pubKeyLocation>
+        <pubKeyFormat>X.509</pubKeyFormat>
+        <pvtKeyLocation>src/main/resources/pki/public/admin10.pub</pvtKeyLocation>
+        <pvtKeyFormat>PKCS#8</pvtKeyFormat>
     </user>
 </users>

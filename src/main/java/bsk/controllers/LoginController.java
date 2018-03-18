@@ -1,6 +1,7 @@
 package bsk.controllers;
 
 import bsk.model.User;
+import bsk.services.KeyPairService;
 import bsk.services.PasswordEncryptionService;
 import bsk.services.UserParserService;
 import javafx.event.ActionEvent;
@@ -33,11 +34,13 @@ public class LoginController {
     private UserParserService userParserService;
     private PasswordEncryptionService passwordEncryptionService;
     private User currentUser;
+    private KeyPairService keyPairService;
 
 
-    public LoginController() {
+    public LoginController() throws NoSuchAlgorithmException {
         userParserService = new UserParserService();
         passwordEncryptionService = new PasswordEncryptionService();
+        keyPairService = new KeyPairService();
     }
 
     public void verifyUser(ActionEvent event) {
@@ -57,8 +60,13 @@ public class LoginController {
     public void addUser(ActionEvent event) {
         try {
             byte[] salt = passwordEncryptionService.generateSalt();
-            userParserService.addUser(new User(login.getText(),
-                    passwordEncryptionService.getEncryptedPassword(password.getText(), salt), salt));
+            User newUser = new User(login.getText(),
+                    passwordEncryptionService.getEncryptedPassword(password.getText(), salt), salt);
+            //generate keys
+            keyPairService.generateKeyPair(newUser);
+
+            userParserService.addUser(newUser);
+
 
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setHeaderText("Account created!");
