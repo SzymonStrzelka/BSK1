@@ -144,7 +144,7 @@ public class FileEncryptionService {
                         byte[] encryptedExt = e.getEncryptedExtension();
                         if (encryptedExt != null) {
                             String fileExtension = decryptExtension(encryptedExt);
-                            String newFileName = outputFile.getName() + "." + fileExtension;
+                            String newFileName = outputFile + "." + fileExtension;
                             outputFile.renameTo(new File(newFileName));
                         }
 
