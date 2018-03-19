@@ -1,7 +1,7 @@
 package bsk.controllers;
 
 import bsk.model.User;
-import bsk.services.KeyPairService;
+import bsk.services.RsaKeysService;
 import bsk.services.PasswordEncryptionService;
 import bsk.services.UserParserService;
 import javafx.event.ActionEvent;
@@ -32,13 +32,13 @@ public class LoginController {
     private UserParserService userParserService;
     private PasswordEncryptionService passwordEncryptionService;
     private User currentUser;
-    private KeyPairService keyPairService;
+    private RsaKeysService rsaKeysService;
 
 
     public LoginController() throws NoSuchAlgorithmException {
         userParserService = new UserParserService();
         passwordEncryptionService = new PasswordEncryptionService();
-        keyPairService = new KeyPairService();
+        rsaKeysService = new RsaKeysService();
     }
 
     public void logIn(ActionEvent event) {
@@ -68,7 +68,7 @@ public class LoginController {
                 User newUser = new User(login.getText(),
                         passwordEncryptionService.getEncryptedPassword(password.getText(), salt), salt);
                 //generate keys
-                keyPairService.generateKeyPair(newUser);
+                rsaKeysService.generateKeyPair(newUser);
 
                 userParserService.addUser(newUser);
 
