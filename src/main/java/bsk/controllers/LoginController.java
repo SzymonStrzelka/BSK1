@@ -89,9 +89,9 @@ public class LoginController {
         stage.close();
     }
 
-    List<String> getUsernames() {
+    List<User> getAllUsers() {
         try {
-            return userParserService.getUsernames();
+            return userParserService.getAllUsers();
         } catch (JAXBException e) {
             e.printStackTrace();
         }

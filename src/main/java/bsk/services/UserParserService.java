@@ -37,9 +37,9 @@ public class UserParserService {
         jaxbMarshaller.marshal(users, new File(usersFilePath));
     }
 
-    public List<String> getUsernames() throws JAXBException {
+    public List<User> getAllUsers() throws JAXBException {
         users = getUsersFromXml();
-        return users.getUserList().stream().map(User::getLogin).collect(Collectors.toList());
+        return users.getUserList();
     }
 
     private Users getUsersFromXml() throws JAXBException {

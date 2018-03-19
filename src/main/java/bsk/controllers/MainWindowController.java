@@ -49,7 +49,7 @@ public class MainWindowController {
     private File decryptInFile;
     private File encryptOutFile;
     private File decryptOutFile;
-    private List<String> usernames;
+    private List<User> users;
 
     private User currentUser;
 
@@ -146,11 +146,13 @@ public class MainWindowController {
 
     private void init() {
         currentUser = loginController.getCurrentUser();
-        usernames = loginController.getUsernames();
-        userList.setItems(getObservableList(usernames));
+        users = loginController.getAllUsers();
+        userList.setItems(getObservableList(users.stream().map(User::getLogin).collect(Collectors.toList())));
     }
-    private List<String> getRecipients(){
-        return Stream.concat(Stream.of(currentUser.getLogin()),
-                userList.getCheckModel().getCheckedItems().stream()).collect(Collectors.toList());
+    private List<User> getRecipients(){
+        return Stream.concat(Stream.of(currentUser),
+                users.stream().filter(user ->
+                    userList.getCheckModel().getCheckedItems().contains(user.getLogin())
+                )).collect(Collectors.toList());
     }
 }

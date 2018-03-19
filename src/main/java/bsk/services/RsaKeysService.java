@@ -17,7 +17,7 @@ import java.security.spec.X509EncodedKeySpec;
 public class RsaKeysService {
 
     private FileOutputStream fileOutputStream;
-    private final KeyPairGenerator kpg;
+    private KeyPairGenerator kpg;
     private final Encrypter encrypter;
     private final String pubKeyDirectory = "src/main/resources/pki/public/";
     private final String pvtKeyDirectory = "src/main/resources/pki/private/";
@@ -25,9 +25,13 @@ public class RsaKeysService {
     private final String pvtKeyExtension = ".pub";
 
 
-    public RsaKeysService() throws NoSuchAlgorithmException {
-        kpg = KeyPairGenerator.getInstance("RSA");
-        kpg.initialize(2048);
+    public RsaKeysService() {
+        try {
+            kpg = KeyPairGenerator.getInstance("RSA");
+            kpg.initialize(2048);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
         encrypter = new Encrypter();
     }
 
@@ -43,7 +47,7 @@ public class RsaKeysService {
 
         Key pvt = kp.getPrivate();
         String pvtLocation = pvtKeyDirectory + user.getLogin() + pvtKeyExtension;
-        saveKeyToFile(pvtLocation, encyptKey(pvt, user.getPassword()));
+        saveKeyToFile(pvtLocation, encryptKey(pvt, user.getPassword()));
 
         user.setPvtKeyLocation(pvtLocation);
         user.setPvtKeyFormat(pvt.getFormat());
@@ -54,30 +58,37 @@ public class RsaKeysService {
         fileOutputStream.write(key);
     }
 
-    public byte[] getKeyFromFile(String path, String format) throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
+    public Key getKeyFromFile(String path, String format, byte[] hash) throws KeyException, InvalidKeySpecException {
         if (format.equals("X.509"))
             return getX509KeyFromFile(path, format);
         else if (format.equals("PKCS#8"))
-            return getPKCS8KeyFromFile(path, format);
+            return getPKCS8KeyFromFile(path, format, hash);
         throw new InvalidKeySpecException("Unsupported key format");
     }
 
-    private byte[] getPKCS8KeyFromFile(String path, String format) throws InvalidKeySpecException, NoSuchAlgorithmException, IOException {
-        byte[] bytes = Files.readAllBytes(Paths.get(path));
-
-        /* Generate private key. */
-        PKCS8EncodedKeySpec ks = new PKCS8EncodedKeySpec(bytes);
-        KeyFactory kf = KeyFactory.getInstance("RSA");
-        return kf.generatePrivate(ks).getEncoded();
+    private Key getPKCS8KeyFromFile(String path, String format, byte[] hash) throws KeyException {
+        try {
+            byte[] bytes = Files.readAllBytes(Paths.get(path));
+            byte[] decryptedKey = decryptKey(bytes, hash);
+            PKCS8EncodedKeySpec ks = new PKCS8EncodedKeySpec(decryptedKey);
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            return kf.generatePrivate(ks);
+        } catch (Exception e){
+            throw new KeyException("Cannot read key from file!");
+        }
     }
 
-    private byte[] getX509KeyFromFile(String path, String format) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        byte[] bytes = Files.readAllBytes(Paths.get(path));
+    private Key getX509KeyFromFile(String path, String format) throws KeyException {
+        try {
+            byte[] bytes = Files.readAllBytes(Paths.get(path));
 
         /* Generate public key. */
-        X509EncodedKeySpec ks = new X509EncodedKeySpec(bytes);
-        KeyFactory kf = KeyFactory.getInstance("RSA");
-        return kf.generatePublic(ks).getEncoded();
+            X509EncodedKeySpec ks = new X509EncodedKeySpec(bytes);
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            return kf.generatePublic(ks);
+        } catch (Exception e){
+            throw new KeyException("Cannot read key from file!");
+        }
     }
 
     private byte[] decryptKey(byte[] encryptedString, byte[] symetricKey) throws EncrypterInitializationException, EncryptionException {
@@ -86,7 +97,7 @@ public class RsaKeysService {
                 null, EncrypterMode.DECRYPTION);
         return encrypter.process(encryptedString);
     }
-    private byte[] encyptKey(Key key, byte[] symetricKey) throws EncrypterInitializationException, EncryptionException {
+    private byte[] encryptKey(Key key, byte[] symetricKey) throws EncrypterInitializationException, EncryptionException {
         SecretKeySpec keySpec = new SecretKeySpec(symetricKey, "AES");
         encrypter.init(keySpec, "AES", CipherMode.ECB, "PKCS5Padding",
                 null, EncrypterMode.ENCRYPTION);

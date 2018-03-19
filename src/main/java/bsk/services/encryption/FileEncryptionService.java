@@ -1,12 +1,10 @@
 package bsk.services.encryption;
 
-import bsk.crypto.encrypter.CipherMode;
-import bsk.crypto.encrypter.Encrypter;
-import bsk.crypto.encrypter.EncrypterMode;
-import bsk.crypto.encrypter.EncryptionException;
+import bsk.crypto.encrypter.*;
 import bsk.crypto.key.SessionKeyGenerator;
 import bsk.model.Encryption;
 import bsk.model.User;
+import bsk.services.RsaKeysService;
 import bsk.services.encryption.reader.EncryptionReader;
 import bsk.services.encryption.writer.EncryptionWriter;
 import io.reactivex.Observable;
@@ -15,13 +13,18 @@ import io.reactivex.functions.Consumer;
 import io.reactivex.rxjavafx.schedulers.JavaFxScheduler;
 import io.reactivex.schedulers.Schedulers;
 
+import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +35,7 @@ public class FileEncryptionService {
     private final SessionKeyGenerator keyGenerator;
     private final EncryptionWriter encryptionWriter;
     private final EncryptionReader encryptionReader;
+    private final RsaKeysService rsaKeysService;
     private static final int BLOCK_SIZE = 128;
     private static final String ALGORITHM = "AES";
     private static final int KEY_SIZE = 128;
@@ -42,13 +46,14 @@ public class FileEncryptionService {
         this.keyGenerator = new SessionKeyGenerator();
         this.encryptionWriter = new EncryptionWriter();
         this.encryptionReader = new EncryptionReader();
+        this.rsaKeysService = new RsaKeysService();
     }
 
 
     public void encrypt(File inputFile,
                         File outputFile,
                         CipherMode cipherMode,
-                        List<String> recipients,
+                        List<User> recipients,
                         Consumer<Double> onProgressChanged,
                         Consumer<Throwable> onError,
                         Action onCompleted) {
@@ -56,14 +61,24 @@ public class FileEncryptionService {
         SecretKey key = keyGenerator.generate128BitKey();
 
         Map<String, byte[]> recipientsKeys = new HashMap<>();
-        recipients.forEach(login -> recipientsKeys.put(login, key.getEncoded()));
+       //encrypt session key with each recipient public key
+        for (User user : recipients) {
+            try {
+                Cipher cipher = Cipher.getInstance("RSA");
+                Key publicKey = rsaKeysService.getKeyFromFile(user.getPubKeyLocation(),
+                        user.getPubKeyFormat(), user.getPassword());
+                cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+                recipientsKeys.put(user.getLogin(), cipher.doFinal(key.getEncoded()));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
         Observable
                 .<Double>create(emitter -> {
                     try (FileInputStream inputStream = new FileInputStream(inputFile)) {
 
                         byte[] initialVector = generateInitialVector(cipherMode);
-
                         encrypter.init(key, ALGORITHM, cipherMode, PADDING, initialVector, EncrypterMode.ENCRYPTION);
 
                         byte[] ext = encryptExtension(inputFile.getName());
@@ -104,6 +119,7 @@ public class FileEncryptionService {
 
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void decrypt(File inputFile,
                         File outputFile,
                         User currentUser,
@@ -116,7 +132,14 @@ public class FileEncryptionService {
 
                         Encryption e = encryptionReader.readHeader(inputFile);
 
-                        byte[] key = e.getRecipientsKeys().get(currentUser.getLogin());
+                        //decrypt session key with user private key
+                        byte[] encryptedKey = e.getRecipientsKeys().get(currentUser.getLogin());
+                        final Cipher cipher = Cipher.getInstance("RSA");
+                        Key privateKey = rsaKeysService.getKeyFromFile(currentUser.getPvtKeyLocation(),
+                                currentUser.getPvtKeyFormat(), currentUser.getPassword());
+                        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+                        byte[] key = cipher.doFinal(encryptedKey);
+
                         SecretKeySpec keySpec = new SecretKeySpec(key, e.getAlgorithm());
                         encrypter.init(keySpec, e.getAlgorithm(), e.getCipherMode(), e.getPadding(),
                                 e.getInitialVector(), EncrypterMode.DECRYPTION);
