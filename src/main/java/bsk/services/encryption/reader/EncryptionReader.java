@@ -48,6 +48,10 @@ public class EncryptionReader {
         return bytesRead;
     }
 
+    public void finish() throws IOException {
+        inputStream.close();
+    }
+
     private Encryption parseHeader() throws XMLStreamException, IOException {
         reader.next();
 

@@ -1,6 +1,9 @@
 package bsk.services.encryption;
 
-import bsk.crypto.encrypter.*;
+import bsk.crypto.encrypter.CipherMode;
+import bsk.crypto.encrypter.Encrypter;
+import bsk.crypto.encrypter.EncrypterMode;
+import bsk.crypto.encrypter.EncryptionException;
 import bsk.crypto.key.SessionKeyGenerator;
 import bsk.model.Encryption;
 import bsk.model.User;
@@ -19,12 +22,9 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.security.spec.InvalidKeySpecException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -134,24 +134,39 @@ public class FileEncryptionService {
 
                         //decrypt session key with user private key
                         byte[] encryptedKey = e.getRecipientsKeys().get(currentUser.getLogin());
-                        final Cipher cipher = Cipher.getInstance("RSA");
-                        Key privateKey = rsaKeysService.getKeyFromFile(currentUser.getPvtKeyLocation(),
-                                currentUser.getPvtKeyFormat(), currentUser.getPassword());
-                        cipher.init(Cipher.DECRYPT_MODE, privateKey);
-                        byte[] key = cipher.doFinal(encryptedKey);
+                        boolean isAuthorized = encryptedKey != null;
+                        SecretKey key;
+                        if (isAuthorized) {
+                            final Cipher cipher = Cipher.getInstance("RSA");
+                            Key privateKey = rsaKeysService.getKeyFromFile(currentUser.getPvtKeyLocation(),
+                                    currentUser.getPvtKeyFormat(), currentUser.getPassword());
+                            cipher.init(Cipher.DECRYPT_MODE, privateKey);
+                            byte[] keyBytes = cipher.doFinal(encryptedKey);
+                            key = new SecretKeySpec(keyBytes, e.getAlgorithm());
 
-                        SecretKeySpec keySpec = new SecretKeySpec(key, e.getAlgorithm());
-                        encrypter.init(keySpec, e.getAlgorithm(), e.getCipherMode(), e.getPadding(),
+                        } else {
+                            //this key is generated only to init encrypter, it won't be used anywhere
+                            key = keyGenerator.generate128BitKey();
+                        }
+
+                        encrypter.init(key, e.getAlgorithm(), e.getCipherMode(), e.getPadding(),
                                 e.getInitialVector(), EncrypterMode.DECRYPTION);
 
                         long totalBytesRead = 0;
                         int readBytes;
                         byte[] inputBytes = new byte[BLOCK_SIZE];
+                        byte[] outputBytes;
+                        Random random = new Random();
 
                         while ((readBytes = encryptionReader.readData(inputBytes)) != -1) {
                             totalBytesRead += readBytes;
-
-                            byte[] outputBytes = encrypter.step(inputBytes, 0, readBytes);
+                            if (isAuthorized) {
+                                outputBytes = encrypter.step(inputBytes, 0, readBytes);
+                            } else {
+                                //unauthorized user won't know if encryption was indeed successful
+                                outputBytes = new byte[readBytes];
+                                random.nextBytes(outputBytes);
+                            }
                             if (outputBytes != null)
                                 outputStream.write(outputBytes);
 
@@ -159,16 +174,19 @@ public class FileEncryptionService {
                             emitter.onNext(progress);
                         }
 
-                        byte[] outputBytes = encrypter.finish();
-                        if (outputBytes != null)
-                            outputStream.write(outputBytes);
-                        outputStream.close();
+                        encryptionReader.finish();
+                        if (isAuthorized) {
+                            outputBytes = encrypter.finish();
+                            if (outputBytes != null)
+                                outputStream.write(outputBytes);
+                            outputStream.close();
 
-                        byte[] encryptedExt = e.getEncryptedExtension();
-                        if (encryptedExt != null) {
-                            String fileExtension = decryptExtension(encryptedExt);
-                            String newFileName = outputFile + "." + fileExtension;
-                            outputFile.renameTo(new File(newFileName));
+                            byte[] encryptedExt = e.getEncryptedExtension();
+                            if (encryptedExt != null) {
+                                String fileExtension = decryptExtension(encryptedExt);
+                                String newFileName = outputFile + "." + fileExtension;
+                                outputFile.renameTo(new File(newFileName));
+                            }
                         }
 
                         emitter.onComplete();
@@ -195,16 +213,15 @@ public class FileEncryptionService {
             return null;
         } else {
             byte[] extBytes = ext.getBytes(StandardCharsets.UTF_8);
-            encrypter.step(extBytes, 0, extBytes.length);
-            return encrypter.finish();
+            return encrypter.process(extBytes);
         }
     }
 
     private String decryptExtension(byte[] encryptedExt) throws EncryptionException {
         if (encryptedExt == null)
             return "";
-        encrypter.step(encryptedExt, 0, encryptedExt.length);
-        byte[] decryptedExt = encrypter.finish();
+
+        byte[] decryptedExt = encrypter.process(encryptedExt);
         return new String(decryptedExt, StandardCharsets.UTF_8);
     }
 
