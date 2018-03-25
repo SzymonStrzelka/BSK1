@@ -1,8 +1,9 @@
 package bsk.controllers;
 
 import bsk.model.User;
-import bsk.services.RsaKeysService;
 import bsk.services.PasswordEncryptionService;
+import bsk.services.PasswordValidator;
+import bsk.services.RsaKeysService;
 import bsk.services.UserParserService;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -33,12 +34,14 @@ public class LoginController {
     private PasswordEncryptionService passwordEncryptionService;
     private User currentUser;
     private RsaKeysService rsaKeysService;
+    private final PasswordValidator passwordValidator;
 
 
     public LoginController() throws NoSuchAlgorithmException {
         userParserService = new UserParserService();
         passwordEncryptionService = new PasswordEncryptionService();
         rsaKeysService = new RsaKeysService();
+        this.passwordValidator = new PasswordValidator(8, 30, 1, 1, 1);
     }
 
     public void logIn(ActionEvent event) {
@@ -54,8 +57,8 @@ public class LoginController {
                     showError("Log in failure", "Bad credentials");
                 }
             }
-        } catch (NoSuchAlgorithmException | JAXBException | InvalidKeySpecException e) {
-            e.printStackTrace();
+        } catch (NoSuchAlgorithmException | JAXBException | InvalidKeySpecException ex1) {
+            ex1.printStackTrace();
             showError("Log in failure", "An error occurred while trying to log in");
         }
     }
@@ -64,6 +67,8 @@ public class LoginController {
         try {
             User user = userParserService.getUser(login.getText());
             if (user == null) {
+                passwordValidator.validate(password.getText());
+
                 byte[] salt = passwordEncryptionService.generateSalt();
                 User newUser = new User(login.getText(),
                         passwordEncryptionService.getEncryptedPassword(password.getText(), salt), salt);
@@ -76,8 +81,10 @@ public class LoginController {
             } else {
                 showError("Account creation failure", "User with that name already exists");
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (PasswordValidator.InvalidPasswordLengthException | PasswordValidator.InsufficientCharacterOccurrencesException ex1) {
+            showError("Account creation failure", ex1.getMessage());
+        } catch (Exception ex2) {
+            ex2.printStackTrace();
             showError("Account creation failure", "An error occurred while trying to create account");
         }
     }
